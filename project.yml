@@ -1,0 +1,25 @@
+name: Colombia
+targets:
+  Colombia:
+    type: application
+    platform: iOS
+    deploymentTarget: "13.0"
+    sources: Colombia
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: CTAColombia.Colombia
+
+  ColombiaTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "13.0"
+    sources: ColombiaTests
+    dependencies:
+      - target: Colombia
+
+  ColombiaUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "13.0"
+    sources: ColombiaUITests
+    dependencies:
+      - target: Colombia
