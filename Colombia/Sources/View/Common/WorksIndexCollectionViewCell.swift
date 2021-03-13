@@ -22,33 +22,38 @@ final class WorksIndexCollectionViewCell: UICollectionViewCell { // TODO: 名前
             iconImageView.contentMode = .scaleAspectFill
         }
     }
-    
+
+    private var imageTask: ImageTask?
     var disposeBag = DisposeBag()
     var isFavorited: Bool = false {
         didSet {
+            let image: UIImage?
             if isFavorited {
-                let image = UIImage(named: "red_heart")
-                favoriteButton.setBackgroundImage(image, for: .normal)
+                image = UIImage(named: "red_heart")
+            } else {
+                image = UIImage(named: "gray_heart")
             }
-            else {
-                let image = UIImage(named: "gray_heart")
-                favoriteButton.setBackgroundImage(image, for: .normal)
-            }
+            favoriteButton.setBackgroundImage(image, for: .normal)
         }
     }
     
     override func prepareForReuse() {
         disposeBag = DisposeBag()
+        imageTask?.cancel()
     }
     
     func configure(work: Work) {
         titleLabel.text = work.title
-        
-        if let imageUrlString = work.imageURL, let imageUrl = URL(string: imageUrlString) {
-            loadImage(with: imageUrl, into: self.iconImageView)
-        } else {
-            let image = UIImage(named: "no_image")
-            self.iconImageView.image = image
+        isFavorited = work.isFavorited
+
+        guard
+            let imageURLString = work.imageURL,
+            let imageURL = URL(string: imageURLString)
+        else {
+            self.iconImageView.image = UIImage(named: "no_image")
+            return
         }
+
+        imageTask = loadImage(with: imageURL, into: iconImageView)
     }
 }
