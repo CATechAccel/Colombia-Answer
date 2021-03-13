@@ -82,7 +82,7 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
 
         viewWillAppearRelay.asObservable()
             .map(dependency.realmRepository.fetchFavoriteWorks)
-            .withLatestFrom(worksRelay) { ($0, $1) }
+            .withLatestFrom(worksRelay) { ($1, $0) }
             .map { works, favoriteWorks -> [Work] in
                 let favoritedIds: [Int] = favoriteWorks.map(\.id)
                 return works.map {
