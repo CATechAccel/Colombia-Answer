@@ -12,6 +12,7 @@ import RxRelay
 protocol HomeViewModelInput {
     var input: HomeViewModelInput { get }
 
+    func viewWillAppear()
     func viewDidLoad()
     func refresh()
     func showWork(work: Work)
@@ -79,6 +80,19 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
             .subscribe()
             .disposed(by: disposeBag)
 
+        viewWillAppearRelay.asObservable()
+            .map(dependency.realmRepository.fetchFavoriteWorks)
+            .withLatestFrom(worksRelay) { ($1, $0) }
+            .map { works, favoriteWorks -> [Work] in
+                let favoritedIds: [Int] = favoriteWorks.map(\.id)
+                return works.map {
+                    var work = $0
+                    work.isFavorited = favoritedIds.contains($0.id)
+                    return work
+                }
+            }
+            .bind(to: worksRelay)
+            .disposed(by: disposeBag)
 
         favoriteWorkRelay.asObservable()
             .map(dependency.realmRepository.favorite(work:))
@@ -111,6 +125,10 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
     }
 
     // Input
+    private let viewWillAppearRelay = PublishRelay<Void>()
+    func viewWillAppear() {
+        viewWillAppearRelay.accept(())
+    }
     private let viewDidLoadRelay = PublishRelay<Void>()
     func viewDidLoad() {
         viewDidLoadRelay.accept(())
