@@ -14,14 +14,13 @@ protocol HomeViewModelInput {
 
     func viewDidLoad()
     func refresh()
+    func showWork(work: Work)
 }
 
 protocol HomeViewModelOutput {
     var output: HomeViewModelOutput { get }
 
     var works: Driver<[Work]> { get }
-
-    func showWork(work: Work)
 }
 
 struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {

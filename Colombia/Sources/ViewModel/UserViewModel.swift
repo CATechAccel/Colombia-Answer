@@ -17,14 +17,13 @@ protocol UserViewModelInput {
 
     func viewDidLoad()
     func refresh()
+    func showWork(work: Work)
 }
 
 protocol UserViewModelOutput {
     var output: UserViewModelOutput { get }
 
     var works: Driver<[Work]> { get }
-
-    func showWork(work: Work)
 }
 
 struct UserViewModel: UserViewModelInput, UserViewModelOutput {
