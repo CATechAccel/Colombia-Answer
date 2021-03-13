@@ -86,17 +86,17 @@ private extension UserViewController {
             .subscribe(onNext: viewModel.input.refresh)
             .disposed(by: disposeBag)
 
+        collectionView.rx.modelSelected(Work.self)
+            .asDriver()
+            .drive(Binder(self) { me, work in
+                me.viewModel.input.showWork(work: work)
+            })
+            .disposed(by: disposeBag)
+
         // Output
         let dataSource = UserDataSource()
         viewModel.output.works
             .drive(collectionView.rx.items(dataSource: dataSource))
-            .disposed(by: disposeBag)
-
-        collectionView.rx.modelSelected(Work.self)
-            .asDriver()
-            .drive(Binder(self) { me, work in
-                me.viewModel.output.showWork(work: work)
-            })
             .disposed(by: disposeBag)
     }
 }
