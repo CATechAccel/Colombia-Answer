@@ -18,7 +18,6 @@ final class UserViewController: UIViewController {
 
     enum Const {
         static let numberOfItemInLine = 3
-        static let cellHeight: CGFloat = 140
     }
 
     @IBOutlet private weak var collectionView: UICollectionView! {
@@ -35,7 +34,11 @@ final class UserViewController: UIViewController {
                 widthDimension: .fractionalWidth(1.0),
                 heightDimension: .fractionalHeight(0.18)
             )
-            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
+            let group = NSCollectionLayoutGroup.horizontal(
+                layoutSize: groupSize,
+                subitem: item,
+                count: Const.numberOfItemInLine
+            )
             let section = NSCollectionLayoutSection(group: group)
             let layout = UICollectionViewCompositionalLayout(section: section)
             collectionView.collectionViewLayout = layout
