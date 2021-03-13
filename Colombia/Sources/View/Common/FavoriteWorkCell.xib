@@ -36,7 +36,6 @@
                             <constraint firstAttribute="width" secondItem="1ow-TY-J7W" secondAttribute="height" multiplier="1:1" id="Jrk-tm-O5R"/>
                             <constraint firstAttribute="width" constant="24" id="i6Z-uO-3Vk"/>
                         </constraints>
-                        <state key="normal" backgroundImage="gray_heart.png"/>
                     </button>
                 </subviews>
             </view>
@@ -61,7 +60,4 @@
             <point key="canvasLocation" x="-221.73913043478262" y="-22.098214285714285"/>
         </collectionViewCell>
     </objects>
-    <resources>
-        <image name="gray_heart.png" width="256" height="256"/>
-    </resources>
 </document>

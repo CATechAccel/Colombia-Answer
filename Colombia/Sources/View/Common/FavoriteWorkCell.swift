@@ -30,8 +30,8 @@ final class FavoriteWorkCell: UICollectionViewCell {
     var disposeBag = DisposeBag()
     var isFavorited: Bool = false {
         didSet {
-            let image = isFavorited ? #imageLiteral(resourceName: "red_heart") : #imageLiteral(resourceName: "gray_heart")
-            favoriteButton.setBackgroundImage(image, for: .normal)
+            favoriteButton.setImage(#imageLiteral(resourceName: "heart"), for: .normal)
+            favoriteButton.tintColor = isFavorited ? .systemPink: .gray
         }
     }
 
