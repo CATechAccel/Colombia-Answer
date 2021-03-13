@@ -10,16 +10,17 @@ import UIKit
 final class TabViewController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let homeVC = HomeViewController(viewModel: HomeViewModel())
-        homeVC.tabBarItem.title = "一覧"
-        homeVC.tabBarItem.tag = 1
-        homeVC.tabBarItem.image = UIImage(named: "document")
+        let router = MainRouter(container: self)
 
-        let userVC = UserViewController(viewModel: UserViewModel())
-        userVC.tabBarItem.title = "お気に入り"
-        userVC.tabBarItem.tag = 2
-        userVC.tabBarItem.image = UIImage(named: "favorite")
+        let homeViewModel = HomeViewModel(dependency: .init(router: router))
+        let homeVC = HomeViewController(viewModel: homeViewModel)
+        homeVC.tabBarItem.title = "Home"
+        homeVC.tabBarItem.image = #imageLiteral(resourceName: "document")
+
+        let userViewModel = UserViewModel(dependency: .init(router: router))
+        let userVC = UserViewController(viewModel: userViewModel)
+        userVC.tabBarItem.title = "User"
+        userVC.tabBarItem.image = #imageLiteral(resourceName: "favorite")
 
         setViewControllers([homeVC, userVC], animated: true)
     }

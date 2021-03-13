@@ -125,5 +125,12 @@ private extension HomeViewController {
         viewModel.output.works
             .drive(collectionView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
+
+        collectionView.rx.modelSelected(Work.self)
+            .asDriver()
+            .drive(Binder(self) { me, work in
+                me.viewModel.output.showWork(work: work)
+            })
+            .disposed(by: disposeBag)
     }
 }
