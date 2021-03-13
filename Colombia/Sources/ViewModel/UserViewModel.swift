@@ -5,12 +5,8 @@
 //  Created by Takuma Osada on 2021/03/13.
 //
 
-import RxSwift
-import RxRelay
-
 import RxCocoa
 import RxSwift
-import RxRelay
 
 protocol UserViewModelInput {
     var input: UserViewModelInput { get }
