@@ -16,13 +16,13 @@ struct AnnictRequest: Requestable {
         baseURL.path = endPoint.endPoint
         
         switch endPoint {
-        case .works:
+        case .works(let season):
             baseURL.queryItems = [
                 URLQueryItem(name: "per_page", value: "20"),
                 // とりあえずid,title,recommended_urlのみを受け取る
                 URLQueryItem(name: "fields", value: "id,title,images"),
                 URLQueryItem(name: "access_token", value: Key.annictApi),
-                URLQueryItem(name: "filter_season", value: "2020-spring")
+                URLQueryItem(name: "filter_season", value: season.rawValue)
             ]
         }
         return baseURL.url!
