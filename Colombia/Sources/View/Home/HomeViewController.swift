@@ -78,9 +78,9 @@ private extension HomeViewController {
 
         collectionView.rx.modelSelected(Work.self)
             .asDriver()
-            .drive(Binder(self) { me, work in
+            .drive(with: self) { me, work in
                 me.viewModel.input.showWork(work: work)
-            })
+            }
             .disposed(by: disposeBag)
         dataSource.favoriteWork
             .emit(onNext: viewModel.favoriteWork(work:))

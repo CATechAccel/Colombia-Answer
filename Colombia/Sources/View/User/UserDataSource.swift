@@ -33,8 +33,8 @@ final class UserDataSource: NSObject, UICollectionViewDataSource {
         let work = items[indexPath.item]
         cell.configure(work: work)
 
-        cell.favoriteButton.rx.tap
-            .bind(to: Binder(self) { me, _ in
+        cell.favoriteButton.rx.tap.asDriver()
+            .drive(with: self) { me, _ in
                 cell.isFavorited.toggle()
 
                 if cell.isFavorited {
@@ -42,7 +42,7 @@ final class UserDataSource: NSObject, UICollectionViewDataSource {
                 } else {
                     me.unfavoriteWorkRelay.accept(work)
                 }
-            })
+            }
             .disposed(by: cell.disposeBag)
 
         return cell
