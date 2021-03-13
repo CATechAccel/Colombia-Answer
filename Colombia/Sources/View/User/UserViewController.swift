@@ -11,13 +11,14 @@ import RxCocoa
 
 final class UserViewController: UIViewController {
     private var viewModel: UserViewModel
+    private let dataSource = UserDataSource()
     private let disposeBag = DisposeBag()
     private let activityIndicator = UIActivityIndicatorView()
     private let refreshControl = UIRefreshControl()
 
     enum Const {
         static let numberOfItemInLine = 3
-        static let cellHeight: CGFloat = 100 // TODO: fix
+        static let cellHeight: CGFloat = 140
     }
 
     @IBOutlet private weak var collectionView: UICollectionView! {
@@ -25,9 +26,18 @@ final class UserViewController: UIViewController {
             collectionView.registerNib(FavoriteWorkCell.self)
             collectionView.refreshControl = refreshControl
 
-            let layout = UICollectionViewFlowLayout()
-            let cellWidth = collectionView.bounds.width / CGFloat(Const.numberOfItemInLine)
-            layout.itemSize = CGSize(width: cellWidth, height: Const.cellHeight)
+            let itemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .fractionalHeight(1.0)
+            )
+            let item = NSCollectionLayoutItem(layoutSize: itemSize)
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .fractionalHeight(0.18)
+            )
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
+            let section = NSCollectionLayoutSection(group: group)
+            let layout = UICollectionViewCompositionalLayout(section: section)
             collectionView.collectionViewLayout = layout
 
             let refreshControl = UIRefreshControl()
@@ -35,12 +45,10 @@ final class UserViewController: UIViewController {
 
             let backgroundView = UIImageView()
             backgroundView.image = #imageLiteral(resourceName: "annict")
-            backgroundView.contentMode = .scaleToFill
+            backgroundView.contentMode = .scaleAspectFill
             collectionView.backgroundView = backgroundView
         }
     }
-
-    private let dataSource = UserDataSource()
 
     init(viewModel: UserViewModel) {
         self.viewModel = viewModel

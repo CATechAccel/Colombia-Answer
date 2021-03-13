@@ -26,14 +26,23 @@ final class HomeViewController: UIViewController {
             collectionView.registerNib(FavoriteWorkCell.self)
             collectionView.refreshControl = refreshControl
 
-            let layout = UICollectionViewFlowLayout()
-            let cellWidth = collectionView.bounds.width / CGFloat(Const.numberOfItemInLine)
-            layout.itemSize = CGSize(width: cellWidth, height: Const.cellHeight)
+            let itemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .fractionalHeight(1.0)
+            )
+            let item = NSCollectionLayoutItem(layoutSize: itemSize)
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .fractionalHeight(0.18)
+            )
+            let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
+            let section = NSCollectionLayoutSection(group: group)
+            let layout = UICollectionViewCompositionalLayout(section: section)
             collectionView.collectionViewLayout = layout
 
             let backgroundView = UIImageView()
             backgroundView.image = #imageLiteral(resourceName: "annict")
-            backgroundView.contentMode = .scaleToFill
+            backgroundView.contentMode = .scaleAspectFill
             collectionView.backgroundView = backgroundView
         }
     }
