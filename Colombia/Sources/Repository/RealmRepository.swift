@@ -20,9 +20,10 @@ struct RealmRepository {
             .map(Work.init(realm:))
     }
 
-    func unFavorite(workId: Int) -> Result<Work, DBError> {
-        dbClient.item(id: workId)
+    func unFavorite(workId: Int) -> Result<Int, DBError> {
+        let item: Result<RealmWork, DBError> = dbClient.item(id: workId)
+        return item
             .flatMap(dbClient.delete(object:))
-            .map(Work.init(realm:))
+            .map { _ in workId }
     }
 }
