@@ -1,6 +1,10 @@
 
 
 # Colombia
+|一覧画面|お気に入り画面|
+|:-----:|:--------:|
+|<img src="https://user-images.githubusercontent.com/27538852/111034090-5ea7ab80-8457-11eb-9095-2b670c900c06.png" width="200px"> | <img src="https://user-images.githubusercontent.com/27538852/111034085-5a7b8e00-8457-11eb-8e3c-b670f0907590.png" width="200px"> |
+
 ## スケジュール
   - 開発期間: 2/2(火) ~ 2/28(日)
 
