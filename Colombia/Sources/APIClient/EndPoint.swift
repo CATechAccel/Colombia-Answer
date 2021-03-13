@@ -7,7 +7,7 @@
 
 enum EndPoint {
     //とりあえずworksだけ実装
-    case works
+    case works(season: Season)
 
     var endPoint: String {
         switch self {
