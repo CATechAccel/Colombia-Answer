@@ -10,33 +10,36 @@ import RxSwift
 import RxCocoa
 
 final class UserViewController: UIViewController {
+    private var viewModel: UserViewModel
+    private let disposeBag = DisposeBag()
+    private let activityIndicator = UIActivityIndicatorView()
+    private let refreshControl = UIRefreshControl()
+
+    enum Const {
+        static let numberOfItemInLine = 3
+        static let cellHeight: CGFloat = 100 // TODO: fix
+    }
+
     @IBOutlet private weak var collectionView: UICollectionView! {
         didSet {
             collectionView.delegate = self
-            collectionView.dataSource = self
-            collectionView.registerNib(WorksIndexCollectionViewCell.self)
+            collectionView.registerNib(FavoriteWorkCell.self)
+            collectionView.refreshControl = refreshControl
 
             let layout = UICollectionViewFlowLayout()
-            layout.sectionInset = UIEdgeInsets(top: 20, left: 30, bottom: 5, right: 30)
-            layout.minimumInteritemSpacing = 5
-
-            let showingRowNum = 3
-            let cellSize = (collectionView.bounds.width - 130) / CGFloat(showingRowNum)
-            layout.itemSize = CGSize(width: cellSize, height: cellSize + 15)
+            let cellWidth = collectionView.bounds.width / CGFloat(Const.numberOfItemInLine)
+            layout.itemSize = CGSize(width: cellWidth, height: Const.cellHeight)
             collectionView.collectionViewLayout = layout
 
             let refreshControl = UIRefreshControl()
             refreshControl.tintColor = .white
 
-            let bgImage = UIImageView()
-            bgImage.image = UIImage(named: "annict")
-            bgImage.contentMode = .scaleToFill
-            collectionView.backgroundView = bgImage
+            let backgroundView = UIImageView()
+            backgroundView.image = #imageLiteral(resourceName: "annict")
+            backgroundView.contentMode = .scaleToFill
+            collectionView.backgroundView = backgroundView
         }
     }
-
-    private let disposeBag = DisposeBag()
-    private var viewModel: UserViewModel
 
     init(viewModel: UserViewModel) {
         self.viewModel = viewModel
@@ -49,16 +52,13 @@ final class UserViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        defer {
+            viewModel.input.viewDidLoad()
+        }
 
-//        //お気に入り作品のデータ更新時にお気に入り画面のCollectionViewをreload
-//        viewModel.favoritedWorks.subscribe(
-//            onNext: {[weak self] _ in
-//                guard let self = self else { return }
-//                DispatchQueue.main.async {
-//                    self.collectionView?.reloadData()
-//                }
-//            })
-//            .disposed(by: disposeBag)
+        setComponent()
+        bindViewModel()
+        activityIndicator.startAnimating()
     }
 }
 
@@ -68,30 +68,28 @@ extension UserViewController: UICollectionViewDelegate {
     }
 }
 
-extension UserViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        viewModel.works.value.count
+private extension UserViewController {
+    private func setComponent() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            // WorkAround: メインスレッドの中にいれないと真ん中にならない
+            self.activityIndicator.center = self.view.center
+            self.activityIndicator.color = .white
+            self.activityIndicator.style = .large
+            self.view.addSubview(self.activityIndicator)
+        }
     }
 
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeue(WorksIndexCollectionViewCell.self, for: indexPath)
-        let work = viewModel.works.value[indexPath.row]
+    private func bindViewModel() {
+        // Input
+        collectionView.refreshControl?.rx.controlEvent(.valueChanged)
+            .subscribe(onNext: viewModel.input.refresh)
+            .disposed(by: disposeBag)
 
-        cell.configure(work: work)
-        cell.isFavorited = work.isFavorited
-
-        cell.favoriteButton.rx.tap
-            .subscribe(
-                onNext: {[weak self] in
-                    guard let self = self else { return }
-
-                    var work = self.viewModel.works.value[indexPath.row]
-                    work.isFavorited.toggle()
-                    cell.isFavorited = work.isFavorited
-//                    self.viewModel.favoriteValueChanged.accept((work, .favorite))
-                })
-            .disposed(by: cell.disposeBag)
-
-        return cell
+        // Output
+        let dataSource = UserDataSource()
+        viewModel.output.works
+            .drive(collectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
     }
 }

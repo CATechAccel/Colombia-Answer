@@ -1,15 +1,15 @@
 //
-//  HomeDataSource.swift
+//  UserDataSource.swift
 //  Colombia
 //
-//  Created by 伊藤凌也 on 2021/03/13.
+//  Created by Takuma Osada on 2021/03/13.
 //
 
 import UIKit
 import RxCocoa
 import RxSwift
 
-final class HomeDataSource: NSObject, UICollectionViewDataSource {
+final class UserDataSource: NSObject, UICollectionViewDataSource {
     typealias Element = [Work]
 
     private var items: Element = []
@@ -37,7 +37,7 @@ final class HomeDataSource: NSObject, UICollectionViewDataSource {
     }
 }
 
-extension HomeDataSource: RxCollectionViewDataSourceType {
+extension UserDataSource: RxCollectionViewDataSourceType {
     func collectionView(_ collectionView: UICollectionView, observedEvent: Event<[Work]>) {
         Binder(self) { dataSource, works in
             dataSource.items = works

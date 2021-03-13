@@ -13,9 +13,29 @@ final class HomeViewController: UIViewController {
     private let viewModel: HomeViewModel
     private let disposeBag = DisposeBag()
     private let activityIndicator = UIActivityIndicatorView()
+    private let refreshControl = UIRefreshControl()
 
     enum Const {
-        static let numberOfRows = 3
+        static let numberOfItemInLine = 3
+        static let cellHeight: CGFloat = 100 // TODO: fix
+    }
+
+    @IBOutlet private weak var collectionView: UICollectionView! {
+        didSet {
+            collectionView.delegate = self
+            collectionView.registerNib(FavoriteWorkCell.self)
+            collectionView.refreshControl = refreshControl
+
+            let layout = UICollectionViewFlowLayout()
+            let cellWidth = collectionView.bounds.width / CGFloat(Const.numberOfItemInLine)
+            layout.itemSize = CGSize(width: cellWidth, height: Const.cellHeight)
+            collectionView.collectionViewLayout = layout
+
+            let backgroundView = UIImageView()
+            backgroundView.image = #imageLiteral(resourceName: "annict")
+            backgroundView.contentMode = .scaleToFill
+            collectionView.backgroundView = backgroundView
+        }
     }
 
     init(viewModel: HomeViewModel) {
@@ -27,24 +47,6 @@ final class HomeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    @IBOutlet private weak var collectionView: UICollectionView! {
-        didSet {
-            collectionView.delegate = self
-            collectionView.registerNib(WorksIndexCollectionViewCell.self)
-            let layout = UICollectionViewFlowLayout()
-//            layout.minimumInteritemSpacing = 30　TODO: 修正
-
-//            let cellSize = (collectionView.bounds.width) / CGFloat(Const.numberOfRows)
-//            layout.itemSize = CGSize(width: cellSize, height: cellSize + 15) TODO: 修正
-            collectionView.collectionViewLayout = layout
-
-            let bgImage = UIImageView()
-            bgImage.image = UIImage(named: "annict")
-            bgImage.contentMode = .scaleToFill
-            collectionView.backgroundView = bgImage
-        }
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
         defer {
@@ -54,34 +56,6 @@ final class HomeViewController: UIViewController {
         setComponent()
         bindViewModel()
         activityIndicator.startAnimating()
-    }
-
-    private func setComponent() {
-        let refreshControl = UIRefreshControl()
-        refreshControl.tintColor = .white
-        collectionView.refreshControl = refreshControl
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            // メインスレッドの中にいれないと真ん中にならない
-            self.activityIndicator.center = self.view.center
-            self.activityIndicator.color = .white
-            self.activityIndicator.style = .large
-            self.view.addSubview(self.activityIndicator)
-        }
-    }
-
-    private func bindViewModel() {
-        // Input
-        collectionView.refreshControl?.rx.controlEvent(.valueChanged)
-            .subscribe(onNext: viewModel.input.refresh)
-            .disposed(by: disposeBag)
-
-        // Output
-        let dataSource = HomeDataSource()
-        viewModel.output.works
-            .drive(collectionView.rx.items(dataSource: dataSource))
-            .disposed(by: disposeBag)
     }
 
 //    private func fetchAPI() {
@@ -125,5 +99,31 @@ final class HomeViewController: UIViewController {
 extension HomeViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // TODO 詳細画面に移動 router作るのもアリ
+    }
+}
+
+private extension HomeViewController {
+    private func setComponent() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            // WorkAround: メインスレッドの中にいれないと真ん中にならない
+            self.activityIndicator.center = self.view.center
+            self.activityIndicator.color = .white
+            self.activityIndicator.style = .large
+            self.view.addSubview(self.activityIndicator)
+        }
+    }
+
+    private func bindViewModel() {
+        // Input
+        collectionView.refreshControl?.rx.controlEvent(.valueChanged)
+            .subscribe(onNext: viewModel.input.refresh)
+            .disposed(by: disposeBag)
+
+        // Output
+        let dataSource = HomeDataSource()
+        viewModel.output.works
+            .drive(collectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
     }
 }
