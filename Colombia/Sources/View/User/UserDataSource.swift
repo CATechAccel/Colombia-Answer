@@ -57,3 +57,9 @@ extension UserDataSource: RxCollectionViewDataSourceType {
         }.on(observedEvent)
     }
 }
+
+extension UserDataSource: SectionedViewDataSourceType {
+    func model(at indexPath: IndexPath) throws -> Any {
+        items[indexPath.item]
+    }
+}

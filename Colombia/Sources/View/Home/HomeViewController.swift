@@ -11,13 +11,14 @@ import RxCocoa
 
 final class HomeViewController: UIViewController {
     private let viewModel: HomeViewModel
+    private let dataSource = HomeDataSource()
     private let disposeBag = DisposeBag()
     private let activityIndicator = UIActivityIndicatorView()
     private let refreshControl = UIRefreshControl()
 
     enum Const {
         static let numberOfItemInLine = 3
-        static let cellHeight: CGFloat = 100 // TODO: fix
+        static let cellHeight: CGFloat = 140
     }
 
     @IBOutlet private weak var collectionView: UICollectionView! {
@@ -36,7 +37,6 @@ final class HomeViewController: UIViewController {
             collectionView.backgroundView = backgroundView
         }
     }
-    private let dataSource = HomeDataSource()
 
     init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
