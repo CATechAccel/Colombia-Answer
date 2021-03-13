@@ -26,6 +26,8 @@ protocol HomeViewModelOutput {
 struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
     struct Dependency {
         var router: MainRouter
+        var annictWorksRepository: AnnictWorksRepository
+        var realmRepository: RealmRepository
     }
 
     private var dependency: Dependency
@@ -40,17 +42,23 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
             viewDidLoadRelay.asObservable(),
             refreshRelay.asObservable(),
         ])
-            .flatMap(fetch)
+            .flatMap(dependency.annictWorksRepository.fetch)
+            .map { $0.works.map(Work.init(entity:)) }
+            .withLatestFrom(Observable.just(dependency.realmRepository.fetchFavoriteWorks())) { ($0, $1) }
+            .map { works, favoriteWorks in
+                let favoritedIds: [Int] = favoriteWorks.map(\.id)
+                return works.map {
+                    var work = $0
+                    work.isFavorited = favoritedIds.contains($0.id)
+                    return work
+                }
+            }
             .bind(to: worksRelay)
             .disposed(by: disposeBag)
     }
 
     func showWork(work: Work) {
         dependency.router.transition(to: .work(work))
-    }
-
-    private func fetch() -> Single<[Work]> {
-        Single.just([])
     }
 
     // Input
