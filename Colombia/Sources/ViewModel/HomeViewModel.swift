@@ -20,16 +20,23 @@ protocol HomeViewModelOutput {
     var output: HomeViewModelOutput { get }
 
     var works: Driver<[Work]> { get }
+
+    func showWork(work: Work)
 }
 
 struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
+    struct Dependency {
+        var router: MainRouter
+    }
 
+    private var dependency: Dependency
     private let disposeBag = DisposeBag()
 
     var input: HomeViewModelInput { self }
     var output: HomeViewModelOutput { self }
 
-    init() {
+    init(dependency: Dependency) {
+        self.dependency = dependency
         Observable.merge([
             viewDidLoadRelay.asObservable(),
             refreshRelay.asObservable(),
@@ -37,6 +44,10 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
             .flatMap(fetch)
             .bind(to: worksRelay)
             .disposed(by: disposeBag)
+    }
+
+    func showWork(work: Work) {
+        dependency.router.transition(to: .work(work))
     }
 
     private func fetch() -> Single<[Work]> {
