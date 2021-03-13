@@ -65,7 +65,6 @@ final class UserViewController: UIViewController {
 
         setComponent()
         bindViewModel()
-        activityIndicator.startAnimating()
     }
 }
 
