@@ -14,6 +14,15 @@ final class HomeDataSource: NSObject, UICollectionViewDataSource {
 
     private var items: Element = []
 
+    private let favoriteWorkRelay = PublishRelay<Work>()
+    var favoriteWork: Signal<Work> {
+        favoriteWorkRelay.asSignal()
+    }
+    private let unfavoriteWorkRelay = PublishRelay<Work>()
+    var unfavoriteWork: Signal<Work> {
+        unfavoriteWorkRelay.asSignal()
+    }
+
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         items.count
     }
@@ -25,11 +34,13 @@ final class HomeDataSource: NSObject, UICollectionViewDataSource {
         cell.configure(work: work)
 
         cell.favoriteButton.rx.tap
-            .subscribe(onNext: {
-                var work = work
-                work.isFavorited.toggle()
-                cell.isFavorited = work.isFavorited
-//                    self.viewModel.favoriteValueChanged.accept((work, .index)) // TODO: これいい感じにできるはずなので修正
+            .bind(to: Binder(self) { me, _ in
+                cell.isFavorited.toggle()
+                if cell.isFavorited {
+                    me.favoriteWorkRelay.accept(work)
+                } else {
+                    me.unfavoriteWorkRelay.accept(work)
+                }
             })
             .disposed(by: cell.disposeBag)
 

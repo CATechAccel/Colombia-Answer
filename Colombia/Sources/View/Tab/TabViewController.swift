@@ -12,7 +12,13 @@ final class TabViewController: UITabBarController {
         super.viewDidLoad()
         let router = MainRouter(container: self)
 
-        let homeViewModel = HomeViewModel(dependency: .init(router: router))
+        let homeViewModel = HomeViewModel(
+            dependency: .init(
+                router: router,
+                annictWorksRepository: .init(),
+                realmRepository: .init()
+            )
+        )
         let homeVC = HomeViewController(viewModel: homeViewModel)
         homeVC.tabBarItem.title = "Home"
         homeVC.tabBarItem.image = #imageLiteral(resourceName: "document")

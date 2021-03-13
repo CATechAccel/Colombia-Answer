@@ -23,4 +23,13 @@ extension Work {
             isFavorited: true
         )
     }
+
+    init(entity: WorkEntity) {
+        self.init(
+            id: entity.id,
+            title: entity.title,
+            imageURL: entity.image.url,
+            isFavorited: false
+        )
+    }
 }

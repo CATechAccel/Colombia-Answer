@@ -22,7 +22,6 @@ final class HomeViewController: UIViewController {
 
     @IBOutlet private weak var collectionView: UICollectionView! {
         didSet {
-            collectionView.delegate = self
             collectionView.registerNib(FavoriteWorkCell.self)
             collectionView.refreshControl = refreshControl
 
@@ -37,6 +36,7 @@ final class HomeViewController: UIViewController {
             collectionView.backgroundView = backgroundView
         }
     }
+    private let dataSource = HomeDataSource()
 
     init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
@@ -58,47 +58,9 @@ final class HomeViewController: UIViewController {
         activityIndicator.startAnimating()
     }
 
-//    private func fetchAPI() {
-//        viewModel.fetch()
-//            .subscribe(on: SerialDispatchQueueScheduler(qos: .background))
-//            .observe(on: MainScheduler.instance)
-//            .subscribe(
-//                onNext: {[weak self] decodeData in
-//                    guard let self = self else { return }
-//
-//                    let works = decodeData.works.map {[weak self] in
-//                        return WorkForDisplay(
-//                            id: $0.id,
-//                            title: $0.title,
-//                            image: $0.image,
-//                            isFavorited: self?.worksIndexModel.isIncludingInFavorite(workId: $0.id) ?? false
-//                        )
-//                    }
-//
-//                    self.worksIndexModel.works.accept(works)
-//                    self.collectionView?.reloadData()
-//                    self.afterFetch()
-//                },
-//                onError: {[weak self] error in
-//                    self?.showRetryAlert(with: error, retryHandler: {[weak self] in
-//                        self?.activityIndicator.startAnimating()
-//                        self?.fetchAPI()
-//                    })
-//                    self?.afterFetch()
-//                }
-//            )
-//            .disposed(by: disposeBag)
-//    }
-
     private func afterFetch() {
         activityIndicator.stopAnimating()
         collectionView.refreshControl?.endRefreshing()
-    }
-}
-
-extension HomeViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // TODO 詳細画面に移動 router作るのもアリ
     }
 }
 
@@ -126,9 +88,14 @@ private extension HomeViewController {
                 me.viewModel.input.showWork(work: work)
             })
             .disposed(by: disposeBag)
+        dataSource.favoriteWork
+            .emit(onNext: viewModel.favoriteWork(work:))
+            .disposed(by: disposeBag)
+        dataSource.unfavoriteWork
+            .emit(onNext: viewModel.unfavoriteWork(work:))
+            .disposed(by: disposeBag)
 
         // Output
-        let dataSource = HomeDataSource()
         viewModel.output.works
             .drive(collectionView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)

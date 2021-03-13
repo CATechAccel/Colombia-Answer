@@ -15,6 +15,8 @@ protocol HomeViewModelInput {
     func viewDidLoad()
     func refresh()
     func showWork(work: Work)
+    func favoriteWork(work: Work)
+    func unfavoriteWork(work: Work)
 }
 
 protocol HomeViewModelOutput {
@@ -26,6 +28,8 @@ protocol HomeViewModelOutput {
 struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
     struct Dependency {
         var router: MainRouter
+        var annictWorksRepository: AnnictWorksRepository
+        var realmRepository: RealmRepository
     }
 
     private var dependency: Dependency
@@ -40,17 +44,48 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
             viewDidLoadRelay.asObservable(),
             refreshRelay.asObservable(),
         ])
-            .flatMap(fetch)
+            .flatMap(dependency.annictWorksRepository.fetch)
+            .map { $0.works.map(Work.init(entity:)) }
+            .withLatestFrom(Observable.just(dependency.realmRepository.fetchFavoriteWorks())) { ($0, $1) }
+            .map { works, favoriteWorks in
+                let favoritedIds: [Int] = favoriteWorks.map(\.id)
+                return works.map {
+                    var work = $0
+                    work.isFavorited = favoritedIds.contains($0.id)
+                    return work
+                }
+            }
             .bind(to: worksRelay)
             .disposed(by: disposeBag)
+
+        favoriteWorkRelay.asObservable()
+            .map(dependency.realmRepository.favorite(work:))
+            .subscribe(onNext: { result in
+                switch result {
+                case .success:
+                    break
+                case .failure:
+                    // TODO: Error handling
+                    break
+                }
+            }).disposed(by: disposeBag)
+
+        unfavoriteWorkRelay.asObservable()
+            .map(\.id)
+            .map(dependency.realmRepository.unFavorite(workId:))
+            .subscribe(onNext: { result in
+                switch result {
+                case .success:
+                    break
+                case .failure:
+                    // TODO: Error handling
+                    break
+                }
+            }).disposed(by: disposeBag)
     }
 
     func showWork(work: Work) {
         dependency.router.transition(to: .work(work))
-    }
-
-    private func fetch() -> Single<[Work]> {
-        Single.just([])
     }
 
     // Input
@@ -61,6 +96,14 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
     private let refreshRelay = PublishRelay<Void>()
     func refresh() {
         refreshRelay.accept(())
+    }
+    private let favoriteWorkRelay = PublishRelay<Work>()
+    func favoriteWork(work: Work) {
+        favoriteWorkRelay.accept(work)
+    }
+    private let unfavoriteWorkRelay = PublishRelay<Work>()
+    func unfavoriteWork(work: Work) {
+        unfavoriteWorkRelay.accept(work)
     }
 
     // Output
