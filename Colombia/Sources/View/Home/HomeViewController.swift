@@ -67,12 +67,6 @@ final class HomeViewController: UIViewController {
 
         setComponent()
         bindViewModel()
-        activityIndicator.startAnimating()
-    }
-
-    private func afterFetch() {
-        activityIndicator.stopAnimating()
-        collectionView.refreshControl?.endRefreshing()
     }
 }
 
@@ -96,9 +90,9 @@ private extension HomeViewController {
 
         collectionView.rx.modelSelected(Work.self)
             .asDriver()
-            .drive(Binder(self) { me, work in
+            .drive(with: self) { me, work in
                 me.viewModel.input.showWork(work: work)
-            })
+            }
             .disposed(by: disposeBag)
         dataSource.favoriteWork
             .emit(onNext: viewModel.favoriteWork(work:))
@@ -111,5 +105,18 @@ private extension HomeViewController {
         viewModel.output.works
             .drive(collectionView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
+
+        viewModel.output.loadingStatus
+            .drive(with: self) { (me, loadingStatus) in
+                switch loadingStatus {
+                case .initial:
+                    me.activityIndicator.startAnimating()
+                case .loading:
+                    break
+                case .loaded, .loadFailed:
+                    me.activityIndicator.stopAnimating()
+                    me.collectionView.refreshControl?.endRefreshing()
+                }
+            }.disposed(by: disposeBag)
     }
 }

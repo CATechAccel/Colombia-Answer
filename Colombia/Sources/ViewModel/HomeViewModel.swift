@@ -23,6 +23,7 @@ protocol HomeViewModelOutput {
     var output: HomeViewModelOutput { get }
 
     var works: Driver<[Work]> { get }
+    var loadingStatus: Driver<LoadingStatus> { get }
 }
 
 struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
@@ -40,14 +41,26 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
 
     init(dependency: Dependency) {
         self.dependency = dependency
-        Observable.merge([
+
+        let fetched = Observable.merge([
             viewDidLoadRelay.asObservable(),
             refreshRelay.asObservable(),
         ])
+            .do(onNext: { [self] in
+                loadingStatusRelay.accept(.loading)
+            })
             .flatMap(dependency.annictWorksRepository.fetch)
+            .materialize()
+            .share()
+
+        fetched
+            .flatMap { $0.element.map(Observable.just) ?? .empty() }
+            .do(onNext: { [self] _ in
+                loadingStatusRelay.accept(.loaded)
+            })
             .map { $0.works.map(Work.init(entity:)) }
             .withLatestFrom(Observable.just(dependency.realmRepository.fetchFavoriteWorks())) { ($0, $1) }
-            .map { works, favoriteWorks in
+            .map { works, favoriteWorks -> [Work] in
                 let favoritedIds: [Int] = favoriteWorks.map(\.id)
                 return works.map {
                     var work = $0
@@ -57,6 +70,15 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
             }
             .bind(to: worksRelay)
             .disposed(by: disposeBag)
+
+        fetched
+            .flatMap { $0.error.map(Observable.just) ?? .empty() }
+            .do(onNext: { [self] _ in
+                loadingStatusRelay.accept(.loadFailed)
+            })
+            .subscribe()
+            .disposed(by: disposeBag)
+
 
         favoriteWorkRelay.asObservable()
             .map(dependency.realmRepository.favorite(work:))
@@ -110,5 +132,9 @@ struct HomeViewModel: HomeViewModelInput, HomeViewModelOutput {
     private let worksRelay = BehaviorRelay<[Work]>(value: [])
     var works: Driver<[Work]> {
         worksRelay.asDriver()
+    }
+    private let loadingStatusRelay = BehaviorRelay<LoadingStatus>(value: .initial)
+    var loadingStatus: Driver<LoadingStatus> {
+        loadingStatusRelay.asDriver()
     }
 }
