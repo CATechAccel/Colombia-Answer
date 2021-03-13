@@ -15,9 +15,12 @@ import RxRelay
 protocol UserViewModelInput {
     var input: UserViewModelInput { get }
 
+    func viewWillAppear()
     func viewDidLoad()
     func refresh()
     func showWork(work: Work)
+    func favoriteWork(work: Work)
+    func unfavoriteWork(work: Work)
 }
 
 protocol UserViewModelOutput {
@@ -29,6 +32,7 @@ protocol UserViewModelOutput {
 struct UserViewModel: UserViewModelInput, UserViewModelOutput {
     struct Dependency {
         var router: MainRouter
+        var realmRepository: RealmRepository
     }
 
     private var dependency: Dependency
@@ -40,23 +44,50 @@ struct UserViewModel: UserViewModelInput, UserViewModelOutput {
     init(dependency: Dependency) {
         self.dependency = dependency
         Observable.merge([
+            viewWillAppearRelay.asObservable(),
             viewDidLoadRelay.asObservable(),
             refreshRelay.asObservable(),
         ])
-            .flatMap(fetch)
+            .map(dependency.realmRepository.fetchFavoriteWorks)
             .bind(to: worksRelay)
             .disposed(by: disposeBag)
+
+        favoriteWorkRelay.asObservable()
+            .map(dependency.realmRepository.favorite(work:))
+            .subscribe(onNext: { result in
+                switch result {
+                case .success:
+                    break
+                case .failure:
+                    // TODO: Error handling
+                    break
+                }
+            }).disposed(by: disposeBag)
+
+        unfavoriteWorkRelay.asObservable()
+            .map(\.id)
+            .map(dependency.realmRepository.unFavorite(workId:))
+            .subscribe(onNext: { result in
+                switch result {
+                case .success:
+                    break
+                case .failure:
+                    // TODO: Error handling
+                    break
+                }
+            }).disposed(by: disposeBag)
+            
     }
 
     func showWork(work: Work) {
         dependency.router.transition(to: .work(work))
     }
 
-    private func fetch() -> Single<[Work]> {
-        Single.just([])
-    }
-
     // Input
+    private let viewWillAppearRelay = PublishRelay<Void>()
+    func viewWillAppear() {
+        viewWillAppearRelay.accept(())
+    }
     private let viewDidLoadRelay = PublishRelay<Void>()
     func viewDidLoad() {
         viewDidLoadRelay.accept(())
@@ -64,6 +95,14 @@ struct UserViewModel: UserViewModelInput, UserViewModelOutput {
     private let refreshRelay = PublishRelay<Void>()
     func refresh() {
         refreshRelay.accept(())
+    }
+    private let favoriteWorkRelay = PublishRelay<Work>()
+    func favoriteWork(work: Work) {
+        favoriteWorkRelay.accept(work)
+    }
+    private let unfavoriteWorkRelay = PublishRelay<Work>()
+    func unfavoriteWork(work: Work) {
+        unfavoriteWorkRelay.accept(work)
     }
 
     // Output

@@ -22,7 +22,6 @@ final class UserViewController: UIViewController {
 
     @IBOutlet private weak var collectionView: UICollectionView! {
         didSet {
-            collectionView.delegate = self
             collectionView.registerNib(FavoriteWorkCell.self)
             collectionView.refreshControl = refreshControl
 
@@ -41,6 +40,8 @@ final class UserViewController: UIViewController {
         }
     }
 
+    private let dataSource = UserDataSource()
+
     init(viewModel: UserViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -48,6 +49,12 @@ final class UserViewController: UIViewController {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        viewModel.input.viewWillAppear()
     }
 
     override func viewDidLoad() {
@@ -59,12 +66,6 @@ final class UserViewController: UIViewController {
         setComponent()
         bindViewModel()
         activityIndicator.startAnimating()
-    }
-}
-
-extension UserViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // **TODO** 詳細画面に移動
     }
 }
 
@@ -92,9 +93,14 @@ private extension UserViewController {
                 me.viewModel.input.showWork(work: work)
             })
             .disposed(by: disposeBag)
+        dataSource.favoriteWork
+            .emit(onNext: viewModel.input.favoriteWork(work:))
+            .disposed(by: disposeBag)
+        dataSource.unfavoriteWork
+            .emit(onNext: viewModel.input.unfavoriteWork(work:))
+            .disposed(by: disposeBag)
 
         // Output
-        let dataSource = UserDataSource()
         viewModel.output.works
             .drive(collectionView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)

@@ -23,7 +23,12 @@ final class TabViewController: UITabBarController {
         homeVC.tabBarItem.title = "Home"
         homeVC.tabBarItem.image = #imageLiteral(resourceName: "document")
 
-        let userViewModel = UserViewModel(dependency: .init(router: router))
+        let userViewModel = UserViewModel(
+            dependency: .init(
+                router: router,
+                realmRepository: .init()
+            )
+        )
         let userVC = UserViewController(viewModel: userViewModel)
         userVC.tabBarItem.title = "User"
         userVC.tabBarItem.image = #imageLiteral(resourceName: "favorite")
