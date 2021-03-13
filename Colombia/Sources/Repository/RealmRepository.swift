@@ -8,15 +8,21 @@
 import RxSwift
 
 struct RealmRepository {
-    func fetchFavoriteWorks() -> Single<[Work]> {
-        Single.just([]) // TODO: fix
+    private let dbClient = DBClient.shared
+
+    func fetchFavoriteWorks() -> [Work] {
+        dbClient.select()
+            .map(Work.init(realm:))
     }
 
-    func favorite(work: Work) -> Single<Void> {
-        Single.just(()) // TODO: fix
+    func favorite(work: Work) -> Result<Work, DBError> {
+        dbClient.create(object: RealmWork(work: work))
+            .map(Work.init(realm:))
     }
 
-    func unFavorite(workId: Int) -> Single<Void> {
-        Single.just(()) // TODO: fix
+    func unFavorite(workId: Int) -> Result<Work, DBError> {
+        dbClient.item(id: workId)
+            .flatMap(dbClient.delete(object:))
+            .map(Work.init(realm:))
     }
 }

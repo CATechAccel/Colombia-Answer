@@ -13,3 +13,14 @@ struct Work {
     var imageURL: String?
     var isFavorited: Bool
 }
+
+extension Work {
+    init(realm: RealmWork) {
+        self.init(
+            id: realm.id,
+            title: realm.title,
+            imageURL: realm.imageURL,
+            isFavorited: true
+        )
+    }
+}
