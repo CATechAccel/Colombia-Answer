@@ -30,7 +30,6 @@ final class HomeViewController: UIViewController {
     @IBOutlet private weak var collectionView: UICollectionView! {
         didSet {
             collectionView.delegate = self
-            collectionView.dataSource = self
             collectionView.registerNib(WorksIndexCollectionViewCell.self)
             let layout = UICollectionViewFlowLayout()
 //            layout.minimumInteritemSpacing = 30　TODO: 修正
@@ -48,26 +47,22 @@ final class HomeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        defer {
+            viewModel.input.viewDidLoad()
+        }
+
+        setComponent()
+        bindViewModel()
+        activityIndicator.startAnimating()
+    }
+
+    private func setComponent() {
         let refreshControl = UIRefreshControl()
         refreshControl.tintColor = .white
         collectionView.refreshControl = refreshControl
 
-        setComponent()
-
-        collectionView.refreshControl?.rx.controlEvent(.valueChanged)
-            .subscribe(
-                onNext: {[weak self] in
-                    self?.fetchAPI()
-                })
-            .disposed(by: disposeBag)
-
-        activityIndicator.startAnimating()
-
-        fetchAPI()
-    }
-
-    private func setComponent() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             // メインスレッドの中にいれないと真ん中にならない
             self.activityIndicator.center = self.view.center
             self.activityIndicator.color = .white
@@ -76,7 +71,20 @@ final class HomeViewController: UIViewController {
         }
     }
 
-    private func fetchAPI() {
+    private func bindViewModel() {
+        // Input
+        collectionView.refreshControl?.rx.controlEvent(.valueChanged)
+            .subscribe(onNext: viewModel.input.refresh)
+            .disposed(by: disposeBag)
+
+        // Output
+        let dataSource = HomeDataSource()
+        viewModel.output.works
+            .drive(collectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
+    }
+
+//    private func fetchAPI() {
 //        viewModel.fetch()
 //            .subscribe(on: SerialDispatchQueueScheduler(qos: .background))
 //            .observe(on: MainScheduler.instance)
@@ -106,7 +114,7 @@ final class HomeViewController: UIViewController {
 //                }
 //            )
 //            .disposed(by: disposeBag)
-    }
+//    }
 
     private func afterFetch() {
         activityIndicator.stopAnimating()
@@ -117,31 +125,5 @@ final class HomeViewController: UIViewController {
 extension HomeViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // TODO 詳細画面に移動 router作るのもアリ
-    }
-}
-
-extension HomeViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        viewModel.works.value.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeue(WorksIndexCollectionViewCell.self, for: indexPath)
-
-        let work = viewModel.works.value[indexPath.row]
-        cell.configure(work: work)
-        cell.isFavorited = work.isFavorited
-
-        cell.favoriteButton.rx.tap
-            .subscribe(onNext: {[weak self] in
-                guard let self = self else { return }
-                var work = self.viewModel.works.value[indexPath.row]
-                work.isFavorited.toggle()
-                cell.isFavorited = work.isFavorited
-//                    self.viewModel.favoriteValueChanged.accept((work, .index)) // TODO: これいい感じにできるはずなので修正
-            })
-            .disposed(by: cell.disposeBag)
-
-        return cell
     }
 }
