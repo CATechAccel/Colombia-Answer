@@ -21,6 +21,7 @@ final class FavoriteWorkCell: UICollectionViewCell {
 
     @IBOutlet private weak var iconImageView: UIImageView! {
         didSet {
+            iconImageView.layer.cornerRadius = 8
             iconImageView.contentMode = .scaleAspectFill
         }
     }
