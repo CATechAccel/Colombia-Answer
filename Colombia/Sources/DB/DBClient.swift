@@ -13,13 +13,15 @@ struct DBClient {
 
     private let realm = try! Realm()
 
-    /// DB にオブジェクトを作成。既に存在していた場合はエラー。
+    /// DB にオブジェクトを作成。
     /// - Parameter object: 作成するオブジェクト
     /// - Returns: Result
     func create<T: Object>(object: T) -> Result<T, DBError> {
         do {
             try realm.write {
-                realm.add(object, update: .error)
+                // Workaround: .error を指定したかったが、すでに primary_key が存在する場合
+                // `logic_error` がスローされてしまっており、ランタイムのエラーじゃないので捕捉できない
+                realm.add(object, update: .modified)
             }
             return .success(object)
         } catch let e {
@@ -44,8 +46,11 @@ struct DBClient {
     /// DB からオブジェクトを取得
     /// - Returns:
     func select<T: Object>(condition: String = "") -> [T] {
-        let objects = realm.objects(T.self).filter(condition)
-        return Array(objects)
+        let objects = realm.objects(T.self)
+        if condition.isEmpty {
+            return Array(objects)
+        }
+        return Array(objects.filter(condition))
     }
 
     /// DB からオブジェクトを　ID で取得

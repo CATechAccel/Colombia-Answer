@@ -8,12 +8,17 @@
 import RealmSwift
 
 final class RealmWork: Object {
-    @objc dynamic var id: Int
-    @objc dynamic var title: String
+    @objc dynamic var id: Int = 0
+    @objc dynamic var title: String = ""
     @objc dynamic var imageURL: String?
     @objc dynamic var createAt = Date()
 
-    init(id: Int, title: String, imageURL: String?) {
+    required override init() {
+        super.init()
+    }
+
+    convenience init(id: Int, title: String, imageURL: String?) {
+        self.init()
         self.id = id
         self.title = title
         self.imageURL = imageURL
